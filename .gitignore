@@ -1,0 +1,57 @@
+
+# Build results
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# VS specific folders
+.vscode/
+.vs/
+
+# Build config
+*.vcxproj.user
+*.pdb
+
+# Publish outputs
+*.publish.xml
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# Others
+*.log
+*.tlog
+*.cache
+*.dbmdl
+
+# Rider (if you also use JetBrains Rider)
+.idea/
+
+# NuGet packages
+*.nupkg
+*.snupkg
+*.nuspec
+packages/
+
+# Dotnet generated files
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# dotenv environment files
+*.env
+
+# Temporary files
+~$*
+
+# Secrets (if you are using user-secrets locally)
+secrets.json
