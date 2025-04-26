@@ -1,4 +1,7 @@
 
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+
 namespace IdentityAPI
 {
 	public class Program
@@ -8,6 +11,15 @@ namespace IdentityAPI
 			var builder = WebApplication.CreateBuilder(args);
 
 			// Add services to the container.
+
+			// Add services to the container.(26-Apr-25)
+			builder.Services.AddDbContext<ApplicationDbContext>(options =>
+				options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+			// Add ASP.NET Core Identity(26-Apr-25)
+			builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+				.AddEntityFrameworkStores<ApplicationDbContext>()
+				.AddDefaultTokenProviders();
 
 			builder.Services.AddControllers();
 			// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
