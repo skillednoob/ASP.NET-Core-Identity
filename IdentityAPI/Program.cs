@@ -21,7 +21,10 @@ namespace IdentityAPI
 				options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 			// Add ASP.NET Core Identity(26-Apr-25)
-			builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+			builder.Services.AddIdentity<ApplicationUser, IdentityRole>(
+																			options => { options.Password.RequiredLength = 10;          //cahnging the default/configuring the password
+																				         options.Password.RequiredUniqueChars = 3;
+																	   })
 				.AddEntityFrameworkStores<ApplicationDbContext>()
 				.AddDefaultTokenProviders();
 

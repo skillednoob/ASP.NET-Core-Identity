@@ -44,5 +44,27 @@ namespace IdentityAPI.Controllers
 			return BadRequest(result.Errors);
 		}
 
+		[HttpPost("Login")]
+		public async Task<IActionResult> Login([FromBody] Login model)
+		{
+			if (!ModelState.IsValid)
+			{
+				return BadRequest(ModelState);
+			}
+
+			var user=await _userManager.FindByEmailAsync(model.Email);
+			if (user == null)
+			{
+				return Unauthorized(new { message = "user does not exsist" });
+			}
+			var isPasswordValid=await _userManager.CheckPasswordAsync(user, model.Password);
+			if (!isPasswordValid)
+			{
+				return Unauthorized(new { message = "wrong password" });
+			}
+			var token=_jwtTokenGenerator.GenerateJwtToken(user);
+			return Ok(new { Token = token });
+		}
+
 	}
 }
