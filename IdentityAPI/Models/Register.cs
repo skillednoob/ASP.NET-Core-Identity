@@ -17,5 +17,7 @@ namespace IdentityAPI.Models
 		[Compare("Password",ErrorMessage ="Password and Confirm Password do not match")]
 		public string ConfirmPassword { get; set;}
 
+		public string City { get; set; }
+
 	}
 }

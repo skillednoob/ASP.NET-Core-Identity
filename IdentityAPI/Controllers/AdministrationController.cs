@@ -10,9 +10,11 @@ namespace IdentityAPI.Controllers
 	public class AdministrationController : ControllerBase
 	{
 		private readonly RoleManager<IdentityRole> _roleManager;
-        public AdministrationController(RoleManager<IdentityRole> roleManager)
+		private readonly UserManager<ApplicationUser> _userManager;
+		public AdministrationController(RoleManager<IdentityRole> roleManager, UserManager<ApplicationUser> userManager)
         {
 				_roleManager = roleManager;
+			_userManager = userManager;
         }
 
 		[HttpPost("CreateRole")]
@@ -71,5 +73,77 @@ namespace IdentityAPI.Controllers
 				}
 			}
 		}
+
+		[HttpGet("ListUsersOfARole")]
+		public async Task<IActionResult> ListUsersOfARole(string roleId)
+		{
+			var role=await _roleManager.FindByIdAsync(roleId);
+			if(role == null)
+			{
+				return NotFound(new { Message = $"Role with id={roleId} cannot be found " });
+			}
+			var model=new List<UserRole>();
+
+            foreach (var user in _userManager.Users.ToList())
+            {
+
+				var userViewModel = new UserRole
+				{
+					UserId = user.Id,
+					UserName = user.UserName
+				};
+				if(await _userManager.IsInRoleAsync(user, role.Name))
+				{
+					userViewModel.IsSelected = true;
+				}
+				else
+				{
+					userViewModel.IsSelected=false;
+				}
+				model.Add(userViewModel);
+            }
+			return Ok(model);
+        }
+
+		[HttpPost("AddOrRemoveUsersForARole")]
+		public async Task<IActionResult> EditUsersForARole(List<UserRole> model,string roleId)
+		{
+			var role = await _roleManager.FindByIdAsync(roleId);
+			if(role == null)
+			{
+				return NotFound(new { Message = $"Role with id={roleId} cannot be found " });
+			}
+			for(int i = 0; i < model.Count; i++)
+			{
+				var user = await _userManager.FindByIdAsync(model[i].UserId);
+				IdentityResult result;
+				if (model[i].IsSelected && !(await _userManager.IsInRoleAsync(user,role.Name)))
+				{
+					result=await _userManager.AddToRoleAsync(user,role.Name);
+				}
+				else if (!model[i].IsSelected && await _userManager.IsInRoleAsync(user, role.Name))
+				{
+					result=await _userManager.RemoveFromRoleAsync(user,role.Name);
+				}
+				else
+				{
+					continue;
+				}
+
+				if (result.Succeeded)
+				{
+					if (i < (model.Count - 1))
+					{
+						continue;
+					}
+					else
+					{
+						return Ok(result);
+					}
+				}
+			}
+			return NoContent();
+		}
+
     }
 }
