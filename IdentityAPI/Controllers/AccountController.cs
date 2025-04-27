@@ -1,5 +1,6 @@
 ﻿using IdentityAPI.JWT;
 using IdentityAPI.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +9,7 @@ namespace IdentityAPI.Controllers
 {
 	[Route("api/[controller]")]
 	[ApiController]
+	//[Authorize]
 	public class AccountController : ControllerBase
 	{
 		private readonly UserManager<ApplicationUser> _userManager;
@@ -21,6 +23,7 @@ namespace IdentityAPI.Controllers
 
 
 		[HttpPost("register")]
+		[AllowAnonymous]
 		public async Task<IActionResult> Register([FromBody] Register model)
 		{
 			if (!ModelState.IsValid)
@@ -45,6 +48,7 @@ namespace IdentityAPI.Controllers
 		}
 
 		[HttpPost("Login")]
+		[AllowAnonymous]
 		public async Task<IActionResult> Login([FromBody] Login model)
 		{
 			if (!ModelState.IsValid)
