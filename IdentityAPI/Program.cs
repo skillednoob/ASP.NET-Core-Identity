@@ -119,9 +119,9 @@ namespace IdentityAPI
 
 			app.UseHttpsRedirection();
 
-			app.UseAuthentication();//For Setup
+			app.UseAuthentication();//For (Identity Setup) and Validates Token -> Creates User.ClaimsPrincipal
 
-			app.UseAuthorization();
+			app.UseAuthorization();//Checks [Authorize(Roles = "Admin")]
 
 
 			app.MapControllers();

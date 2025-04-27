@@ -1,4 +1,5 @@
 ﻿using IdentityAPI.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -7,6 +8,7 @@ namespace IdentityAPI.Controllers
 {
 	[Route("api/[controller]")]
 	[ApiController]
+	[Authorize(Roles ="Admin")]
 	public class AdministrationController : ControllerBase
 	{
 		private readonly RoleManager<IdentityRole> _roleManager;
