@@ -1,6 +1,10 @@
 
+using IdentityAPI.JWT;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace IdentityAPI
 {
@@ -26,6 +30,28 @@ namespace IdentityAPI
 			builder.Services.AddEndpointsApiExplorer();
 			builder.Services.AddSwaggerGen();
 
+			//JWT(27-Apr-25)
+			builder.Services.AddAuthentication(options =>
+			{
+				options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+				options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+				options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+			}).AddJwtBearer(options =>
+			{
+				options.SaveToken = true;
+				options.RequireHttpsMetadata = false; // Only set to false during development!
+				options.TokenValidationParameters = new TokenValidationParameters()
+				{
+					ValidateIssuer = true,
+					ValidateAudience = true,
+					ValidAudience = builder.Configuration["JWT:ValidAudience"],
+					ValidIssuer = builder.Configuration["JWT:ValidIssuer"],
+					IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Secret"]))
+				};
+			});
+
+			builder.Services.AddScoped<JwtTokenGenerator>();//Seprate class is created so
+
 			var app = builder.Build();
 
 			// Configure the HTTP request pipeline.
@@ -36,6 +62,8 @@ namespace IdentityAPI
 			}
 
 			app.UseHttpsRedirection();
+
+			app.UseAuthentication();//For Setup
 
 			app.UseAuthorization();
 
