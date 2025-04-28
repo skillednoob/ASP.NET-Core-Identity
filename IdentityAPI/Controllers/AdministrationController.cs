@@ -1,4 +1,5 @@
-﻿using IdentityAPI.Models;
+﻿using IdentityAPI.JWT;
+using IdentityAPI.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -108,6 +109,7 @@ namespace IdentityAPI.Controllers
         }
 
 		[HttpPost("AddOrRemoveUsersForARole")]
+		//Add/Remove user[S] for a Role
 		public async Task<IActionResult> EditUsersForARole(List<UserRole> model,string roleId)
 		{
 			var role = await _roleManager.FindByIdAsync(roleId);
@@ -147,5 +149,99 @@ namespace IdentityAPI.Controllers
 			return NoContent();
 		}
 
-    }
+		[HttpGet("ListUsers")]
+		public IActionResult ListUsers()
+		{
+			var users = _userManager.Users;
+			return Ok(users);
+		}
+
+		[HttpGet("GetUser")]
+		public async Task<IActionResult> GetUser(string id)
+		{
+			var user=await _userManager.FindByIdAsync(id);
+			if (user == null)
+			{
+				return BadRequest();
+			}
+			return Ok(user);
+		}
+
+		[HttpPost("CreateUser")]		 
+		public async Task<IActionResult> CreateUser([FromBody] CreateUser model)
+		{
+			if (!ModelState.IsValid)
+			{
+				return BadRequest(ModelState);
+			}
+
+			// Check if Role Exists First ✅
+			if (!await _roleManager.RoleExistsAsync(model.Role))
+			{
+				return BadRequest(new { Message = $"Role '{model.Role}' does not exist." });
+			}
+
+			// Create the user
+			var user = new ApplicationUser
+			{
+				UserName = model.Email,
+				Email = model.Email,
+				City = model.City
+			};
+
+			var result = await _userManager.CreateAsync(user, model.Password);
+
+			if (!result.Succeeded)
+			{
+				var errors = result.Errors.Select(e => e.Description);
+				return BadRequest(new { Errors = errors });
+			}
+
+			// Assign the Role
+			var roleResult = await _userManager.AddToRoleAsync(user, model.Role);
+
+			if (!roleResult.Succeeded)
+			{
+				var errors = roleResult.Errors.Select(e => e.Description);
+				return BadRequest(new { Errors = errors });
+			}
+			 
+
+			return Ok(new
+			{
+				Message = "User created and role assigned successfully!"
+				 
+			});
+		}
+
+		//edit users email,username,city
+		[HttpPost("EditUser")]
+		public async Task<IActionResult> EditUser(EditUser model)
+		{
+			if (!ModelState.IsValid)
+			{
+				return BadRequest(ModelState);
+			}
+			var user = await _userManager.FindByIdAsync(model.Id);
+			if (user == null)
+			{
+				return NotFound(new { Message = "user cannot be found" });
+			}
+
+			user.Email= model.Email;
+			user.UserName = model.UserName;
+			user.City = model.City;
+
+			var result=await _userManager.UpdateAsync(user);
+			if (result.Succeeded)
+			{
+				return Ok(new { Message = "User updated Succesfully" });
+			}
+
+			var errors=result.Errors.Select(e => e.Description);
+			return BadRequest(new {Errors = errors});
+		}
+
+
+	}
 }
