@@ -242,6 +242,40 @@ namespace IdentityAPI.Controllers
 			return BadRequest(new {Errors = errors});
 		}
 
+		[HttpDelete("DeleteUser")]
+		public async Task<IActionResult> DeleteUser(string UserId)
+		{
+			var user = await _userManager.FindByIdAsync(UserId);
+			if(user== null)
+			{
+				return NotFound(new { Message = "user cannot be found" });
+			}
+			var result=await _userManager.DeleteAsync(user);
+			if(result.Succeeded)
+			{
+				return Ok(new { Message = "User Deleted Succesfully" });
+			}
+			var errors = result.Errors.Select(e => e.Description);
+			return BadRequest(new { Errors = errors });
+		}
+
+		[HttpDelete("DeleteRole")]
+		public async Task<IActionResult> DeleteRole(string RoleId)
+		{
+			var role = await _roleManager.FindByIdAsync(RoleId);
+			if (role == null)
+			{
+				return NotFound(new { Message = " role cannot not be found" });
+			}
+			var result = await _roleManager.DeleteAsync(role);
+			if (result.Succeeded)
+			{
+				return Ok(new { Message = "Role Deleted Succesfully" });
+			}
+			var errors = result.Errors.Select(e => e.Description);
+			return BadRequest(new { Errors = errors });
+		}
+
 
 	}
 }
