@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace IdentityAPI.Controllers
 {
@@ -276,6 +277,93 @@ namespace IdentityAPI.Controllers
 			return BadRequest(new { Errors = errors });
 		}
 
+		[HttpGet("ListRolesOfAUser")]
+		public async Task<IActionResult> ListRolesOfAUser(string UserId)
+		{
+			var user = await _userManager.FindByIdAsync(UserId);
+			if (user == null)
+			{
+				return NotFound(new { Message = " role cannot not be found" });
+			}
+			var model = new List<RoleUser>();
+
+			// Materialize the roles *before* the loop:
+			var roles = await _roleManager.Roles.ToListAsync(); // Use ToListAsync() Or directly use in foreach loop but use .toList();
+
+			foreach (var role in roles)
+			{
+				var roleUser = new RoleUser
+				{
+					RoleId = role.Id,
+					RoleName = role.Name
+				};
+				if (await _userManager.IsInRoleAsync(user, role.Name))
+				{
+					roleUser.IsSelected = true;
+				}
+				else
+				{
+					roleUser.IsSelected = false;
+				}
+				model.Add(roleUser);
+			}
+			return Ok(model);
+		}
+
+		[HttpPost("AddOrRemoveRolesForAUser")]
+		// Add/Remove role[s] for a User
+		public async Task<IActionResult> AddOrRemoveRolesForAUser(List<RoleUser> model,string UserId)
+		{
+			var user = await _userManager.FindByIdAsync(UserId);
+			if (user == null)
+			{
+				return NotFound(new { Message = $"User with id={UserId} cannot be found " });
+			}
+
+			for (int i = 0; i < model.Count; i++)
+			{
+				var role = await _roleManager.FindByIdAsync(model[i].RoleId);
+				if (role == null)
+				{
+					return NotFound(new { Message = $"Role with id={model[i].RoleId} cannot be found " });
+				}
+
+				IdentityResult result;
+				if (model[i].IsSelected && !(await _userManager.IsInRoleAsync(user, role.Name)))
+				{
+					result = await _userManager.AddToRoleAsync(user, role.Name);
+				}
+				else if (!model[i].IsSelected && await _userManager.IsInRoleAsync(user, role.Name))
+				{
+					result = await _userManager.RemoveFromRoleAsync(user, role.Name);
+				}
+				else
+				{
+					continue;
+				}
+
+				if (result.Succeeded)
+				{
+					if (i < (model.Count - 1))
+					{
+						continue;
+					}
+					else
+					{
+						return Ok(result);
+					}
+				}
+				else
+				{
+					// If there's an error, you might want to return a more specific error message
+					return BadRequest(result.Errors);
+				}
+			}
+
+			return NoContent();
+
+
+		}
 
 	}
 }
