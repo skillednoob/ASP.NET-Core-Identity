@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Security.Claims;
 
 namespace IdentityAPI.Controllers
 {
@@ -363,6 +366,64 @@ namespace IdentityAPI.Controllers
 			return NoContent();
 
 
+		}
+
+		[HttpGet("GetUserClaims")]
+		public async Task<IActionResult> GetUserClaims(string userId)
+		{
+			var user = await _userManager.FindByIdAsync(userId);
+			if (user == null)
+			{
+				return NotFound(new { Message = $"User with id={userId} cannot be found " });
+			}
+			var model = new UserClaims{UserId = userId};
+			var exsistingClaims=await _userManager.GetClaimsAsync(user);
+			foreach(Claim c in ClaimStore.AllClaims)
+			{
+				UserClaim uc = new UserClaim { ClaimType = c.Type };
+				//if (exsistingClaims.Any(c => c.Type == c.Type))
+				//{
+				//	uc.IsSelected = true;
+				//}
+				if (exsistingClaims.Any(ec => ec.Type == c.Type && ec.Value == c.Value))
+				{
+					uc.IsSelected = true;
+				}
+				model.Claims.Add(uc);
+			}
+			return Ok(model);
+
+        }
+		[HttpPost("AddOrRemoveUserClaimsForAUser")]
+		public async Task<IActionResult> AddOrRemoveUserClaimsForAUser(UserClaims model)
+		{
+			var user=await _userManager.FindByIdAsync(model.UserId);
+			if (user == null)
+			{
+				return NotFound(new { Message = $"User with id={model.UserId} cannot be found " });
+			}
+			var claims=await _userManager.GetClaimsAsync(user);
+			//var result = await _userManager.RemoveClaimAsync(user, claims);
+			foreach (var claimToRemove in claims)
+			{
+				var result = await _userManager.RemoveClaimAsync(user, claimToRemove);
+				if (!result.Succeeded)
+				{
+					// Handle errors during claim removal
+					foreach (var error in result.Errors)
+					{
+						ModelState.AddModelError(string.Empty, error.Description);
+					}
+					// You might want to return an error response here or log the errors
+					return BadRequest(ModelState);
+				}
+			} 
+			var ans = await _userManager.AddClaimsAsync(user,model.Claims.Where(c => c.IsSelected).Select(c => new Claim(c.ClaimType, c.ClaimType)));
+			if (!ans.Succeeded)
+			{
+				return BadRequest(ModelState);
+			}
+			return Ok(new { Message = "User claims updated successfully." });
 		}
 
 	}
