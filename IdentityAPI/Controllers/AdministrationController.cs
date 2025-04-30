@@ -247,6 +247,7 @@ namespace IdentityAPI.Controllers
 		}
 
 		[HttpDelete("DeleteUser")]
+		[Authorize(Policy = "DeleteRolePolicy")]
 		public async Task<IActionResult> DeleteUser(string UserId)
 		{
 			var user = await _userManager.FindByIdAsync(UserId);

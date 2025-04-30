@@ -99,6 +99,10 @@ namespace IdentityAPI
 				options.DefaultPolicy = new AuthorizationPolicyBuilder()
 					.RequireAuthenticatedUser() //  Require ALL users to be authenticated.
 					.Build();
+
+				// Add your CLAIM-based policies(30-Apr-25)
+				options.AddPolicy("DeleteRolePolicy", policy =>
+					policy.RequireClaim("DeleteRole"));
 			});
 
 			builder.Services.AddControllers(options =>
