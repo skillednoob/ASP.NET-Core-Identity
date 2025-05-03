@@ -13,6 +13,10 @@ obj/
 .DS_Store
 Thumbs.db
 
+# Ignore appsettings.json (use environment-specific or secrets)
+appsettings.json
+appsettings.*.json
+
 # VS specific folders
 .vscode/
 .vs/
