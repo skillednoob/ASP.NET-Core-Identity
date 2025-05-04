@@ -36,6 +36,10 @@ namespace IdentityAPI.JWT
 			}
 			//END
 
+			// 2. Get all user claims from AspNetUserClaims table
+			var userClaims = await _userManager.GetClaimsAsync(user);  // This is what you're missing
+			claims.AddRange(userClaims);  // Add all custom claims to the token
+
 			var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
 			var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 			var expiry = DateTime.Now.AddMinutes(Convert.ToDouble(_configuration["JWT:TokenLifetimeInMinutes"]));
