@@ -26,7 +26,8 @@ namespace IdentityAPI
 			builder.Services.AddIdentity<ApplicationUser, IdentityRole>(
 																			options => { options.Password.RequiredLength = 10;          //cahnging the default/configuring the password
 																				         options.Password.RequiredUniqueChars = 3;
-																	   })
+																				options.SignIn.RequireConfirmedEmail = true;		    //For Email Conformation
+																			})
 				.AddEntityFrameworkStores<ApplicationDbContext>()
 				.AddDefaultTokenProviders();
 			//IDENTITY END

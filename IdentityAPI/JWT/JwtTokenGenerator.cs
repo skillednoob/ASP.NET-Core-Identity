@@ -37,7 +37,7 @@ namespace IdentityAPI.JWT
 			//END
 
 			// 2. Get all user claims from AspNetUserClaims table
-			var userClaims = await _userManager.GetClaimsAsync(user);  // This is what you're missing
+			var userClaims = await _userManager.GetClaimsAsync(user);  // for customer claims
 			claims.AddRange(userClaims);  // Add all custom claims to the token
 
 			var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
