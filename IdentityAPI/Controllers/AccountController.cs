@@ -179,6 +179,29 @@ namespace IdentityAPI.Controllers
 			return BadRequest(ModelState);
 		}
 
+		[HttpPost("ChangePassword")]
+		public async Task<IActionResult> ChangePassword(ChangePassword model)
+		{
+			if (!ModelState.IsValid)
+			{
+				return BadRequest(ModelState);
+			}
+
+			var user = await _userManager.GetUserAsync(User);
+			if (user == null)
+			{
+				return Unauthorized(new { message = "Invalid user." });
+			}
+
+			var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+			if (result.Succeeded)
+			{
+				return Ok(new { message = "Password changed successfully." });
+			}
+
+			var errors = result.Errors.Select(e => e.Description);
+			return BadRequest(new { errors = errors });
+		}
 
 
 	}
