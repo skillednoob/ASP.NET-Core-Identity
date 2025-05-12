@@ -1,4 +1,5 @@
-﻿using IdentityAPI.JWT;
+﻿using IdentityAPI.IServices;
+using IdentityAPI.JWT;
 using IdentityAPI.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -16,12 +17,14 @@ namespace IdentityAPI.Controllers
 		private readonly UserManager<ApplicationUser> _userManager;
 		private readonly JwtTokenGenerator _jwtTokenGenerator; // Inject the token generator
 		private readonly ILogger<AccountController> _logger;
+		private readonly IEmailSender _emailSender;
 
-		public AccountController(UserManager<ApplicationUser> userManager, JwtTokenGenerator jwtTokenGenerator, ILogger<AccountController> logger)
+		public AccountController(UserManager<ApplicationUser> userManager, JwtTokenGenerator jwtTokenGenerator, ILogger<AccountController> logger,IEmailSender emailSender)
 		{
 			_userManager = userManager;
 			_jwtTokenGenerator = jwtTokenGenerator;
 			_logger = logger;
+			_emailSender = emailSender;
 		}
 
 
@@ -56,9 +59,16 @@ namespace IdentityAPI.Controllers
 					Request.Scheme);                   // generate full URL with http/https
 
 				// ✅ Send the email - replace with real email sending Simulate sending email (in real app, send via SMTP/sendgrid/etc)
-				Console.WriteLine($"Confirm your email using this link: {confirmationLink}");
+				//Console.WriteLine($"Confirm your email using this link: {confirmationLink}");
 
-				return Ok(new { message = "User registered successfully. Please confirm your email." });
+				//return Ok(new { message = "User registered successfully. Please confirm your email." });
+				var subject = "Confirm your email";
+				var message = $"Please confirm your email address by clicking the following link: <a href='{confirmationLink}'>Confirm Email</a>";
+
+				// ✅ Use the injected email sender service to send the email
+				await _emailSender.SendEmailAsync(user.Email, subject, message);
+
+				return Ok(new { message = "User registered successfully. Please check your email to confirm your account." });
 			}
 
 			return BadRequest(result.Errors);

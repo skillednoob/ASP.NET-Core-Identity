@@ -1,5 +1,7 @@
 
+using IdentityAPI.IServices;
 using IdentityAPI.JWT;
+using IdentityAPI.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -70,6 +72,8 @@ namespace IdentityAPI
 			});
 			//SWAGGER AUTHORIZATION END
 
+			builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));//for binding apsettings.json with smtpSettings class
+			builder.Services.AddScoped<IEmailSender, EmailSender>();
 
 			//JWT START(27-Apr-25)
 			builder.Services.AddAuthentication(options =>
