@@ -75,6 +75,9 @@ namespace IdentityAPI
 			builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));//for binding apsettings.json with smtpSettings class
 			builder.Services.AddScoped<IEmailSender, EmailSender>();
 
+			builder.Services.AddScoped<ISendGridEmailService,SendGridEmailService>();//SENDGRID
+
+
 			//JWT START(27-Apr-25)
 			builder.Services.AddAuthentication(options =>
 			{

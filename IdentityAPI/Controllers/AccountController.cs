@@ -1,11 +1,13 @@
 ﻿using IdentityAPI.IServices;
 using IdentityAPI.JWT;
 using IdentityAPI.Models;
+using IdentityAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace IdentityAPI.Controllers
 {
@@ -18,13 +20,15 @@ namespace IdentityAPI.Controllers
 		private readonly JwtTokenGenerator _jwtTokenGenerator; // Inject the token generator
 		private readonly ILogger<AccountController> _logger;
 		private readonly IEmailSender _emailSender;
+		private readonly ISendGridEmailService _emailService;
 
-		public AccountController(UserManager<ApplicationUser> userManager, JwtTokenGenerator jwtTokenGenerator, ILogger<AccountController> logger,IEmailSender emailSender)
+		public AccountController(UserManager<ApplicationUser> userManager, JwtTokenGenerator jwtTokenGenerator, ILogger<AccountController> logger,IEmailSender emailSender, ISendGridEmailService emailService)
 		{
 			_userManager = userManager;
 			_jwtTokenGenerator = jwtTokenGenerator;
 			_logger = logger;
 			_emailSender = emailSender;
+			_emailService = emailService;
 		}
 
 
@@ -139,6 +143,13 @@ namespace IdentityAPI.Controllers
 			var confirmationLink = $"{Request.Scheme}://{Request.Host}/api/account/confirmemail?userId={user.Id}&token={encodedToken}";
 
 			_logger.LogWarning(confirmationLink); // Log for debugging
+
+			//SENDGRID
+			var emailBody = $"<p>Hi {email},</p><p>Please verify your email by clicking <a href='{confirmationLink}'>this link</a>.</p>";
+
+			await _emailService.SendEmailAsync(user.Email, "Confirm your email", emailBody);
+
+			return Ok("Resend link has been sent  successful. Please check your email to verify your account.");
 
 			return Ok(new { message = "Confirmation link resent.", link = confirmationLink });
 		}
