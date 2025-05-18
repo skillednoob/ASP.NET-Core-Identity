@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using IdentityAPI.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace IdentityAPI
@@ -7,7 +8,9 @@ namespace IdentityAPI
 	{
 		public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options): base(options)
 		{
-		
+					 
 		}
+
+		public DbSet<RefreshToken> RefreshTokens { get; set; }
 	}
 }

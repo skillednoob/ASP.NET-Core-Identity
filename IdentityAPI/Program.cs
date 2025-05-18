@@ -93,6 +93,8 @@ namespace IdentityAPI
 					ValidateIssuer = true,
 					ValidateAudience = true,
 					ValidAudience = builder.Configuration["JWT:ValidAudience"],
+					ValidateLifetime = true, //  CRITICAL middleware for checking token expiry! This enforces expiration
+					ClockSkew = TimeSpan.Zero, //  CRITICAL: no grace period after expiration(JWT tokens are valid for up to 5 minutes after their expiry time)
 					ValidIssuer = builder.Configuration["JWT:ValidIssuer"],
 					IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Secret"]))
 				};

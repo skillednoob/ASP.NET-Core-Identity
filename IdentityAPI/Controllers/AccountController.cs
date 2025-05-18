@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
@@ -21,14 +22,16 @@ namespace IdentityAPI.Controllers
 		private readonly ILogger<AccountController> _logger;
 		private readonly IEmailSender _emailSender;
 		private readonly ISendGridEmailService _emailService;
+		private readonly ApplicationDbContext _context;
 
-		public AccountController(UserManager<ApplicationUser> userManager, JwtTokenGenerator jwtTokenGenerator, ILogger<AccountController> logger,IEmailSender emailSender, ISendGridEmailService emailService)
+		public AccountController(UserManager<ApplicationUser> userManager, JwtTokenGenerator jwtTokenGenerator, ILogger<AccountController> logger,IEmailSender emailSender, ISendGridEmailService emailService, ApplicationDbContext context)
 		{
 			_userManager = userManager;
 			_jwtTokenGenerator = jwtTokenGenerator;
 			_logger = logger;
 			_emailSender = emailSender;
 			_emailService = emailService;
+			_context = context;
 		}
 
 
@@ -222,6 +225,37 @@ namespace IdentityAPI.Controllers
 
 			var errors = result.Errors.Select(e => e.Description);
 			return BadRequest(new { errors = errors });
+		}
+
+
+		[HttpPost("refresh")]
+		[AllowAnonymous]
+		public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request)
+		{
+			if (string.IsNullOrEmpty(request.RefreshToken))
+				return BadRequest(new { message = "Refresh token is required" });
+
+			// Get the token from DB
+			var storedToken = await _context.RefreshTokens
+				.Include(rt => rt.User)
+				.FirstOrDefaultAsync(rt => rt.Token == request.RefreshToken);
+
+			if (storedToken == null || storedToken.IsUsed || storedToken.IsRevoked)
+				return Unauthorized(new { message = "Invalid refresh token" });
+
+			if (storedToken.Expires < DateTime.UtcNow)
+				return Unauthorized(new { message = "Refresh token expired" });
+
+			// ✅ Mark old token as used
+			storedToken.IsUsed = true;
+			storedToken.IsRevoked = true;
+			_context.RefreshTokens.Update(storedToken);
+			await _context.SaveChangesAsync();
+
+			// ✅ Generate new tokens
+			var authResponse = await _jwtTokenGenerator.GenerateJwtToken(storedToken.User);
+
+			return Ok(authResponse);
 		}
 
 
